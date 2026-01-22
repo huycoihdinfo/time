@@ -1,0 +1,3 @@
+name = "time-sync-api"
+compatibility_date = "2026-01-22"
+pages_build_output_dir = "."
