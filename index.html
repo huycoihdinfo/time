@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🎯 Bộ đếm TikTok</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #000000;
+      --accent: #ff0050;
+      --border: #ddd;
+      --success: #28a745;
+      --warning: #ffc107;
+      --error: #dc3545;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      transition: background-color 0.3s;
+    }
+    .container { width: 100%; max-width: 500px; text-align: center; }
+    
+    .username-header { margin-bottom: 15px; display: none; }
+    .username-link {
+      color: var(--text);
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .username-link:hover { color: var(--accent); }
+    
+    .stats { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
+    .stat-item {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+    }
+    .stat-icon { color: var(--accent); }
+    
+    .countdown {
+      font-family: 'Roboto', sans-serif;
+      font-size: 5rem;
+      font-weight: 700;
+      color: var(--text);
+      margin: 20px 0;
+    }
+    
+    .size-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+    .size-btn {
+      width: 28px; height: 28px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .size-btn:hover { background: #f0f0f0; }
+    .size-value { font-size: 12px; min-width: 35px; }
+    
+    .status { display: none; align-items: center; justify-content: center; gap: 6px; margin-bottom: 15px; font-size: 13px; color: #666; }
+    
+    .delta-controls { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 15px; flex-wrap: wrap; }
+    .delta-btn {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 11px;
+      font-family: 'Roboto', sans-serif;
+    }
+    .delta-btn:hover { background: #f0f0f0; }
+    .delta-text { font-size: 13px; min-width: 70px; text-align: center; font-weight: 500; }
+    
+    .config-btn {
+      padding: 8px 16px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 13px;
+      font-family: 'Roboto', sans-serif;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .config-btn:hover { background: #f0f0f0; }
+    
+    .color-display { margin-top: 15px; display: none; }
+    .color-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+    .color-box button { 
+      padding: 3px 8px; 
+      border: 1px solid var(--error); 
+      border-radius: 3px; 
+      background: var(--bg); 
+      color: var(--error); 
+      cursor: pointer; 
+      font-size: 11px; 
+    }
+    .color-box button:hover { background: var(--error); color: white; }
+    
+    .sync-status {
+      position: fixed;
+      top: 8px;
+      right: 8px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      z-index: 1000;
+    }
+    .sync-status.connected { background: #d4edda; color: var(--success); }
+    .sync-status.connecting { background: #fff3cd; color: #856404; }
+    .sync-status.disconnected { background: #f8d7da; color: var(--error); }
+    .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .sync-status.connecting .sync-dot { animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    
+    .debug {
+      position: fixed;
+      bottom: 8px;
+      right: 8px;
+      padding: 4px 8px;
+      background: #f8f9fa;
+      color: #666;
+      font-size: 9px;
+      border-radius: 3px;
+      border: 1px solid #eee;
+    }
+    
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
+    .modal.show { display: flex; }
+    .modal-content { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 350px; }
+    .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 15px; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; margin-bottom: 5px; font-size: 12px; color: #666; }
+    .form-group input { 
+      width: 100%; 
+      padding: 8px; 
+      border: 1px solid var(--border); 
+      border-radius: 4px; 
+      font-size: 13px; 
+      font-family: 'Roboto', sans-serif;
+    }
+    .form-group input:focus { outline: none; border-color: var(--accent); }
+    .modal-actions { display: flex; gap: 8px; margin-top: 15px; }
+    .modal-btn { 
+      flex: 1; 
+      padding: 8px; 
+      border: 1px solid var(--border); 
+      border-radius: 4px; 
+      cursor: pointer; 
+      font-size: 12px; 
+      font-family: 'Roboto', sans-serif;
+    }
+    .modal-btn-cancel { background: white; color: var(--text); }
+    .modal-btn-cancel:hover { background: #f0f0f0; }
+    .modal-btn-submit { background: var(--accent); color: white; border-color: var(--accent); }
+    .modal-btn-submit:hover { background: #e0004a; }
+  </style>
+</head>
+<body>
+  <div class="sync-status connecting" id="sync-status">
+    <div class="sync-dot"></div>
+    <span id="sync-text">Đang kết nối...</span>
+  </div>
+
+  <div class="container">
+    <div class="username-header" id="username-header">
+      <a href="#" target="_blank" class="username-link" id="username-link">
+        <i class="fab fa-tiktok"></i>
+        <span id="username-display">@username</span>
+      </a>
+    </div>
+    
+    <div class="stats">
+      <div class="stat-item" id="stat-matxem">
+        <i class="fas fa-eye stat-icon"></i>
+        <span id="matxem-display">0</span>
+      </div>
+      <div class="stat-item" id="stat-people">
+        <i class="fas fa-users stat-icon"></i>
+        <span id="view-display">0</span>/<span id="people-display">0</span>
+      </div>
+    </div>
+
+    <div class="countdown" id="countdown">Đang tải...</div>
+    
+    <div class="size-controls">
+      <button class="size-btn" id="btn-size-down"><i class="fas fa-minus"></i></button>
+      <span class="size-value" id="size-value">5.0</span>
+      <button class="size-btn" id="btn-size-up"><i class="fas fa-plus"></i></button>
+    </div>
+    
+    <div class="status" id="status-container">
+      <i class="fas fa-clock"></i>
+      <span id="status-text"></span>
+    </div>
+    
+    <div class="delta-controls">
+      <button class="delta-btn" id="btn-d50">-0.05s</button>
+      <button class="delta-btn" id="btn-d10">-0.01s</button>
+      <span class="delta-text" id="delta-text">±0.00s</span>
+      <button class="delta-btn" id="btn-i10">+0.01s</button>
+      <button class="delta-btn" id="btn-i50">+0.05s</button>
+    </div>
+    
+    <div><button class="config-btn" id="btn-open"><i class="fas fa-palette"></i> Đổi màu nền</button></div>
+    <div id="color-display" class="color-display"></div>
+  </div>
+
+  <div class="debug" id="debug">remaining: 0s</div>
+
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <div class="modal-title">Cấu hình màu nền</div>
+      <div class="form-group">
+        <label>Từ (giây):</label>
+        <input type="number" id="start_seconds" step="0.1" min="0" placeholder="10.5">
+      </div>
+      <div class="form-group">
+        <label>Đến (giây):</label>
+        <input type="number" id="end_seconds" step="0.1" min="0" placeholder="5.0">
+      </div>
+      <div class="form-group">
+        <label>Màu nền:</label>
+        <input type="color" id="hex_color" value="#ff0050">
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" id="btn-cancel">Hủy</button>
+        <button class="modal-btn modal-btn-submit" id="btn-submit">Lưu</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    'use strict';
+
+    const PING_INTERVAL = 5000;
+    const RECONNECT_DELAY = 2000;
+
+    const urlParams = new URLSearchParams(location.search);
+    
+    function decodeToken(t) {
+      try {
+        const b64 = t.replace(/-/g, '+').replace(/_/g, '/');
+        return JSON.parse(atob(b64 + '='.repeat((4 - b64.length % 4) % 4)));
+      } catch { return null; }
+    }
+
+    let P = urlParams.has('token') ? (decodeToken(urlParams.get('token')) || {}) : Object.fromEntries(urlParams);
+    
+    let rawTime = P.time ? parseInt(P.time) : null;
+    
+    if (rawTime && rawTime < 10000000000) {
+      rawTime = rawTime * 1000; // Chuyển từ seconds sang milliseconds
+    }
+    
+    const timeId = P.time_id || null;
+    const username = P.username || '';
+    const viewCount = P.view || '';
+    const peopleCount = P.people || '';
+    const timeunbound = P.timeunbound || '';
+    const matxem = P.matxem || '';
+
+    if (username) {
+      document.getElementById('username-header').style.display = 'block';
+      document.getElementById('username-link').href = `https://tiktok.com/@${username}`;
+      document.getElementById('username-display').textContent = `@${username}`;
+    }
+    if (matxem) {
+      document.getElementById('stat-matxem').style.display = 'flex';
+      document.getElementById('matxem-display').textContent = matxem;
+    }
+    if (matxem && viewCount && peopleCount) {
+      document.getElementById('stat-people').style.display = 'flex';
+      document.getElementById('view-display').textContent = viewCount;
+      document.getElementById('people-display').textContent = peopleCount;
+    }
+    if (timeunbound) {
+      document.getElementById('status-container').style.display = 'flex';
+      document.getElementById('status-text').textContent = timeunbound;
+    }
+
+    let serverTimeOffset = null;
+    let serverRTT = Infinity;
+    let isSynced = false;
+    let syncIntervalId = null;
+    let endTime = rawTime || null;
+
+    // ========== DOM ==========
+    const countdownEl = document.getElementById('countdown');
+    const syncStatusEl = document.getElementById('sync-status');
+    const syncTextEl = document.getElementById('sync-text');
+    const debugEl = document.getElementById('debug');
+
+    function getDelta() {
+      try { return parseFloat(localStorage.getItem('delta_time') || '0') || 0; }
+      catch { return 0; }
+    }
+    function setDelta(v) {
+      try { localStorage.setItem('delta_time', JSON.stringify(v)); } catch {}
+    }
+    function getColors() {
+      try { return JSON.parse(localStorage.getItem('color_times') || '[]') || []; }
+      catch { return []; }
+    }
+    function saveColors(c) {
+      try { localStorage.setItem('color_times', JSON.stringify(c)); } catch {}
+    }
+    function getSavedTimeOffset() {
+      try { return JSON.parse(localStorage.getItem('ofs_3') || 'null'); }
+      catch { return null; }
+    }
+    function saveTimeOffset(data) {
+      try { localStorage.setItem('ofs_3', JSON.stringify(data)); } catch {}
+    }
+
+    function setStatus(s, t) {
+      syncStatusEl.className = `sync-status ${s}`;
+      syncTextEl.textContent = t;
+    }
+
+    function getSyncedTime() {
+      if (serverTimeOffset === null) return null;
+      return Date.now() + serverTimeOffset;
+    }
+
+    async function syncServerTime() {
+      try {
+        const randomParam = Math.floor(Math.random() * (100 - 50 + 1)) + 50;
+        const startTime = performance.now();
+        
+        const response = await fetch('/api/ping?z=' + randomParam);
+        const endTime = performance.now();
+        
+        let serverTimeStr = await response.text();
+        serverTimeStr = serverTimeStr.split('').map(char => char.charCodeAt(0) - 1 - 2 * randomParam).join('');
+        
+        const serverTime = parseInt(serverTimeStr);
+        const rtt = endTime - startTime;
+        const localTime = Date.now() - (performance.now() - (startTime + rtt / 2));
+        const offset = serverTime - localTime;
+        
+        return { offset, rtt, serverTime };
+      } catch (e) {
+        console.error('Sync time error:', e);
+        throw e;
+      }
+    }
+
+    async function initTimeSync() {
+      setStatus('connecting', 'Đang đồng bộ...');
+      countdownEl.textContent = 'Đang đồng bộ...';
+      countdownEl.style.fontSize = '2rem';
+      
+      let syncSuccess = false;
+      let retryCount = 0;
+      const maxRetries = 10;
+      
+      while (!syncSuccess && retryCount < maxRetries) {
+        try {
+          const syncResult = await syncServerTime();
+          if (syncResult) {
+            serverTimeOffset = syncResult.offset;
+            serverRTT = syncResult.rtt;
+            saveTimeOffset({ offset: serverTimeOffset, rtt: serverRTT, serverTime: syncResult.serverTime });
+            isSynced = true;
+            syncSuccess = true;
+            setStatus('connected', 'Đã đồng bộ');
+            console.log('✅ Đồng bộ thành công! Offset:', serverTimeOffset, 'ms');
+          }
+        } catch (e) {
+          retryCount++;
+          console.warn(`Thử lại lần ${retryCount}/${maxRetries}...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+      
+      if (!syncSuccess) {
+        setStatus('disconnected', 'Không thể đồng bộ');
+        countdownEl.textContent = '❌ Lỗi đồng bộ';
+        countdownEl.style.color = 'red';
+        alert('Không thể đồng bộ thời gian với server. Vui lòng kiểm tra kết nối!');
+        return;
+      }
+      
+      countdownEl.style.fontSize = '';
+      countdownEl.style.color = '';
+      
+      syncIntervalId = setInterval(async () => {
+        try {
+          const syncResult = await syncServerTime();
+          if (syncResult) {
+            const savedOffset = getSavedTimeOffset();
+            const timeDiff = Math.abs(syncResult.serverTime - (savedOffset?.serverTime || 0));
+            if (!savedOffset || savedOffset.rtt > syncResult.rtt || timeDiff >= 120000) {
+              serverTimeOffset = syncResult.offset;
+              serverRTT = syncResult.rtt;
+              saveTimeOffset({ offset: serverTimeOffset, rtt: serverRTT, serverTime: syncResult.serverTime });
+            }
+          }
+        } catch (e) {
+          console.warn('Sync định kỳ thất bại:', e);
+        }
+      }, PING_INTERVAL);
+      
+      render();
+    }
+
+    function render() {
+      const now = getSyncedTime();
+      
+      if (now === null || endTime === null) {
+        requestAnimationFrame(render);
+        return;
+      }
+      
+      const delta = getDelta();
+      const remaining = Math.max(0, (endTime - now + delta) / 1000);
+
+      if (remaining <= 0) {
+        countdownEl.textContent = '0';
+        applyColor(0);
+        
+        if (syncIntervalId) {
+          clearInterval(syncIntervalId);
+          syncIntervalId = null;
+          console.log('⏹️ Đã dừng ping server');
+        }
+      } else {
+        countdownEl.textContent = remaining.toFixed(1);
+        applyColor(remaining);
+      }
+
+      debugEl.textContent = `remaining: ${remaining.toFixed(1)}s | offset: ${(serverTimeOffset/1000).toFixed(2)}s`;
+      
+      requestAnimationFrame(render);
+    }
+
+    function applyColor(sec) {
+      const colors = getColors();
+      const match = colors.find(c => c.end_seconds <= sec && sec <= c.start_seconds);
+      const color = match?.hex_background_color || '#ffffff';
+      if (document.body.style.backgroundColor !== color) {
+        document.body.style.backgroundColor = color;
+      }
+    }
+
+    let currentDelta = getDelta();
+
+    function updateDeltaDisplay() {
+      const show = currentDelta / 1000;
+      document.getElementById('delta-text').textContent = `${show >= 0 ? '+' : ''}${show.toFixed(2)}s`;
+    }
+
+    function adjustDelta(amt) {
+      currentDelta += amt;
+      setDelta(currentDelta);
+      updateDeltaDisplay();
+    }
+
+    let currentSize = parseFloat(localStorage.getItem('countdown_size') || '5');
+
+    function updateSize(s) {
+      currentSize = Math.max(1, Math.min(15, s));
+      localStorage.setItem('countdown_size', currentSize);
+      countdownEl.style.fontSize = currentSize + 'rem';
+      document.getElementById('size-value').textContent = currentSize.toFixed(1);
+    }
+
+    function displayColors() {
+      const colors = getColors();
+      const container = document.getElementById('color-display');
+      container.innerHTML = '';
+      container.style.display = colors.length ? 'block' : 'none';
+
+      colors.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'color-box';
+        div.innerHTML = `
+          <button onclick="delColor('${item.id}')">Xóa</button>
+          <span>${Number(item.start_seconds).toFixed(1)}s → ${Number(item.end_seconds).toFixed(1)}s</span>
+          <div style="height:24px;width:24px;background:${item.hex_background_color};border-radius:4px;border:1px solid #ddd;"></div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    window.delColor = (id) => {
+      if (!confirm('Xóa?')) return;
+      saveColors(getColors().filter(c => `${c.id}` !== `${id}`));
+      displayColors();
+    };
+
+    function submitColor() {
+      const s = parseFloat(document.getElementById('start_seconds').value);
+      const e = parseFloat(document.getElementById('end_seconds').value);
+      const c = document.getElementById('hex_color').value;
+      if (isNaN(s) || isNaN(e) || s < 0 || e < 0) { alert('Nhập thời gian hợp lệ'); return; }
+      const colors = getColors();
+      colors.push({ id: `${Date.now()}${Math.round(Math.random()*1000)}`, start_seconds: Math.max(s,e), end_seconds: Math.min(s,e), hex_background_color: c });
+      saveColors(colors);
+      document.getElementById('start_seconds').value = '';
+      document.getElementById('end_seconds').value = '';
+      document.getElementById('modal').classList.remove('show');
+      displayColors();
+    }
+
+    function init() {
+      if (!endTime) {
+        countdownEl.textContent = '❌ Thiếu time';
+        setStatus('disconnected', 'Thiếu tham số');
+        return;
+      }
+      
+      initTimeSync();
+
+      updateDeltaDisplay();
+      document.getElementById('btn-i10')?.addEventListener('click', () => adjustDelta(10));
+      document.getElementById('btn-i50')?.addEventListener('click', () => adjustDelta(50));
+      document.getElementById('btn-d10')?.addEventListener('click', () => adjustDelta(-10));
+      document.getElementById('btn-d50')?.addEventListener('click', () => adjustDelta(-50));
+
+      updateSize(currentSize);
+      document.getElementById('btn-size-up')?.addEventListener('click', () => updateSize(currentSize + 0.5));
+      document.getElementById('btn-size-down')?.addEventListener('click', () => updateSize(currentSize - 0.5));
+
+      document.getElementById('btn-open')?.addEventListener('click', () => document.getElementById('modal').classList.add('show'));
+      document.getElementById('btn-cancel')?.addEventListener('click', () => document.getElementById('modal').classList.remove('show'));
+      document.getElementById('btn-submit')?.addEventListener('click', submitColor);
+
+      displayColors();
+
+      document.addEventListener('keydown', e => {
+        if (e.ctrlKey && e.key === 'ArrowUp') { e.preventDefault(); updateSize(currentSize + 0.5); }
+        if (e.ctrlKey && e.key === 'ArrowDown') { e.preventDefault(); updateSize(currentSize - 0.5); }
+      });
+    }
+
+    document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', init) : init();
+  })();
+  </script>
+</body>
+</html>
