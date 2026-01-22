@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+    <title>Canh thời gian mở rương/túi</title>
+    <style>
+        html, body {
+            visibility: visible;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            text-align: center;
+            min-height: 100vh;
+            overflow-y: auto;
+            background-color: #ffffff;
+        }
+        
+        @media (max-width: 600px) {
+            #config-container {
+                width: 95% !important;
+                padding: 15px !important;
+                max-height: 85vh !important;
+            }
+            
+            #color-picker {
+                height: 50px !important;
+            }
+            
+            #btn-pick-color {
+                padding: 12px 16px !important;
+                font-size: 14px !important;
+            }
+        }
+
+        #changeUIBtn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 8888;
+            padding: 10px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        #changeUIBtn:hover {
+            background-color: #0056b3;
+        }
+
+        .info {
+            font-size: 2rem;
+            padding: 1px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .countdown {
+            font-size: 6.8rem;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #000000;
+            margin: 10px 0;
+            line-height: 1.2;
+        }
+
+        .time {
+            margin-top: 5px;
+            font-size: 1.2rem;
+            font-style: italic;
+            color: #000000;
+        }
+        
+        @media (max-width: 600px) {
+            .countdown {
+                font-size: 6.5rem;
+                padding-top: 15px;
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+        }
+
+        .cb {
+            background: #3e5c76;
+            color: #fff;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 50px;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .cb:hover {
+            background: #2d4559;
+        }
+
+        .note {
+            padding: 5px;
+            margin-top: 5px;
+            font-size: 1.2rem;
+            font-style: italic;
+            width: 60%;
+        }
+
+        @media (max-width: 600px) {
+            .info {
+                font-size: 1.5rem;
+                padding: 15px;
+            }
+
+            .note {
+                font-size: 1.2rem;
+                margin-top: 20px;
+            }
+
+            .time {
+                font-size: 1.2rem;
+            }
+        }
+
+        .btn-open {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .btn-open:hover {
+            background: #0056b3;
+        }
+
+        #delta-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        #delta-text {
+            font-size: 18px;
+            color: #000000;
+            min-width: 60px;
+        }
+
+        .btn-increase {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            background: #28a745;
+            color: white;
+            cursor: pointer;
+            max-width: 80px;
+        }
+
+        .btn-increase:hover {
+            background: #218838;
+        }
+
+        .btn-decrease {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            background: #dc3545;
+            color: white;
+            cursor: pointer;
+            max-width: 80px;
+        }
+
+        .btn-decrease:hover {
+            background: #c82333;
+        }
+
+        .user-link {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .user-link:hover {
+            text-decoration: underline;
+        }
+
+        .stats {
+            font-size: 2rem;
+            color: #000000;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <button id="changeUIBtn">Theme</button>
+    
+    <div class="info" id="info">
+        <a id="userLink" class="user-link" target="_blank" href="#">Loading...</a>
+        <div id="stats" class="stats">Loading...</div>
+    </div>
+    
+    <div class="countdown" id="countdown">0</div>
+    <div class="time" id="time"></div>
+    
+    <div id="delta-control">
+        <button id="btn-decrease-0.01" class="btn-decrease">-0.01</button>
+        <button id="btn-decrease-0.05" class="btn-decrease">-0.05</button>
+        <span id="delta-text">0.00s</span>
+        <button id="btn-increase-0.05" class="btn-increase">+0.05</button>
+        <button id="btn-increase-0.01" class="btn-increase">+0.01</button>
+    </div>
+    
+    <div class="note">
+        <button class="cb" id="claimBtn" style="visibility: hidden">COPY</button>
+        <button class="cb" id="claimChangeBtn" style="padding-left: 10px; padding-right: 10px; margin-left: 10px; visibility: hidden;">+</button>
+    </div>
+    
+    <div id="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 10000; align-items: center; justify-content: center;">
+        <div id="config-container" style="background: white; padding: 20px; border-radius: 10px; max-width: 90%; width: 400px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); position: relative;">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 16px;">Thời gian bắt đầu:</label>
+                <input type="number" id="start-time" step="0.1" placeholder="Ví dụ nhập 0.7" style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 16px;">Thời gian kết thúc:</label>
+                <input type="number" id="end-time" step="0.1" placeholder="Ví dụ nhập 0.1" style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 10px; font-weight: bold; font-size: 16px;">Hiển thị màu nền:</label>
+                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
+                    <input type="color" id="color-picker" value="#ff0000" style="flex: 1; height: 50px; border: 2px solid #ccc; border-radius: 4px; cursor: pointer; min-width: 0;">
+                    <button id="btn-pick-color" style="padding: 12px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; white-space: nowrap;">Chọn màu</button>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button id="btn-add-color" style="padding: 12px 24px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; flex: 1;">Thêm</button>
+                    <button id="btn-close-config" style="padding: 12px 24px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; flex: 1;">Đóng</button>
+                </div>
+            </div>
+            <div id="color-list" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <button id="btn-open-config" class="btn-open">Thêm màu sắc theo thời gian</button>
+    </div>
+
+    <script>
+        let serverTimeOffset = null;
+        let serverRTT = Infinity;
+        let isSynced = false;
+        let syncIntervalId = null;
+        
+        async function syncServerTime() {
+            try {
+                const randomParam = Math.floor(Math.random() * (100 - 50 + 1)) + 50;
+                const startTime = performance.now();
+                
+                const response = await fetch('/api/ping?z=' + randomParam);
+                const endTime = performance.now();
+                
+                let serverTimeStr = await response.text();
+                serverTimeStr = serverTimeStr.split('').map(char => char.charCodeAt(0) - 1 - 2 * randomParam).join('');
+                
+                const serverTime = parseInt(serverTimeStr);
+                const rtt = endTime - startTime;
+                const localTime = Date.now() - (performance.now() - (startTime + rtt / 2));
+                const offset = serverTime - localTime;
+                
+                return { offset, rtt, serverTime };
+            } catch (e) {
+                console.error('Sync time error:', e);
+                throw e;
+            }
+        }
+        
+        function getSavedTimeOffset() {
+            try {
+                return JSON.parse(localStorage.getItem('ofs_3') || 'null');
+            } catch {
+                return null;
+            }
+        }
+        
+        function saveTimeOffset(data) {
+            try {
+                localStorage.setItem('ofs_3', JSON.stringify(data));
+            } catch {}
+        }
+        
+        function getSyncedTime() {
+            if (serverTimeOffset === null) {
+                return null;
+            }
+            return Date.now() + serverTimeOffset;
+        }
+        
+        (async function initTimeSync() {
+            const countdownEl = document.getElementById('countdown');
+            countdownEl.textContent = 'Đang đồng bộ...';
+            countdownEl.style.fontSize = '2rem';
+            
+            let syncSuccess = false;
+            let retryCount = 0;
+            const maxRetries = 10;
+            
+            while (!syncSuccess && retryCount < maxRetries) {
+                try {
+                    const syncResult = await syncServerTime();
+                    if (syncResult) {
+                        serverTimeOffset = syncResult.offset;
+                        serverRTT = syncResult.rtt;
+                        saveTimeOffset({ offset: serverTimeOffset, rtt: serverRTT, serverTime: syncResult.serverTime });
+                        isSynced = true;
+                        syncSuccess = true;
+                    }
+                } catch (e) {
+                    retryCount++;
+                    console.warn(`Thử lại lần ${retryCount}/${maxRetries}...`);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            }
+            
+            if (!syncSuccess) {
+                countdownEl.textContent = '❌ Không thể đồng bộ';
+                countdownEl.style.color = 'red';
+                alert('Không thể đồng bộ thời gian với server. Vui lòng kiểm tra kết nối!');
+                return;
+            }
+            
+            countdownEl.style.fontSize = '5.5rem';
+            
+            syncIntervalId = setInterval(async () => {
+                try {
+                    const syncResult = await syncServerTime();
+                    if (syncResult) {
+                        const savedOffset = getSavedTimeOffset();
+                        const timeDiff = Math.abs(syncResult.serverTime - (savedOffset?.serverTime || 0));
+                        if (!savedOffset || savedOffset.rtt > syncResult.rtt || timeDiff >= 120000) {
+                            serverTimeOffset = syncResult.offset;
+                            serverRTT = syncResult.rtt;
+                            saveTimeOffset({ offset: serverTimeOffset, rtt: serverRTT, serverTime: syncResult.serverTime });
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Sync định kỳ thất bại:', e);
+                }
+            }, 5000);
+            
+            updateTimer();
+            setInterval(updateTimer, 30);
+        })();
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const rParam = urlParams.get('r');
+        const mParam = urlParams.get('m');
+        
+        let rData = {};
+        let mData = {};
+        
+        if (rParam) {
+            try {
+                const rDecoded = decodeURIComponent(escape(atob(rParam)));
+                rData = JSON.parse(rDecoded);
+            } catch (e) {
+                console.error('Error decoding r:', e);
+            }
+        }
+        
+        if (mParam) {
+            try {
+                const mDecoded = decodeURIComponent(mParam);
+                mData = JSON.parse(mDecoded);
+            } catch (e) {
+                console.warn('⚠️ Parameter m invalid or incomplete:', mParam);
+                mData = {};
+            }
+        }
+        
+        const user = rData.user || 'Unknown';
+        const room = rData.room || '';
+        const endTime = rData.end_time || 0;
+        const coins = rData.coins || 0;
+        const canOpen = rData.can_open || 0;
+        const hotBoxStr = mData.hot_box_str || '';
+        const latestViewersStr = mData.latest_viewers_str || 0;
+        
+        const userLink = document.getElementById('userLink');
+        userLink.textContent = user;
+        userLink.href = `https://www.tiktok.com/@${user}`;
+        
+        const statsEl = document.getElementById('stats');
+        statsEl.innerHTML = `${coins}/${canOpen} ${hotBoxStr} ${latestViewersStr ? '- 👀 ' + latestViewersStr : ''}`;
+        
+        const countdownEl = document.getElementById('countdown');
+        const timeEl = document.getElementById('time');
+        const deltaTextEl = document.getElementById('delta-text');
+        
+        let deltaTime = 0;
+        try {
+            const savedDelta = localStorage.getItem('delta_time');
+            if (savedDelta) {
+                deltaTime = parseFloat(savedDelta) || 0;
+            }
+        } catch (e) {}
+        
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+        }
+        
+        const colorStorageKey = `color_rules_${rData.lt || room || 'default'}`;
+        let colorRules = [];
+        
+        const cParam = urlParams.get('c');
+        if (cParam) {
+            try {
+                const cDecoded = decodeURIComponent(cParam);
+                const cData = JSON.parse(cDecoded);
+                if (Array.isArray(cData) && cData.length > 0) {
+                    colorRules = cData;
+                    localStorage.setItem(colorStorageKey, JSON.stringify(colorRules));
+                }
+            } catch (e) {}
+        }
+        
+        if (colorRules.length === 0) {
+            try {
+                const savedRules = localStorage.getItem(colorStorageKey);
+                if (savedRules) {
+                    colorRules = JSON.parse(savedRules);
+                }
+            } catch (e) {}
+        }
+        
+        function getBackgroundColor(remaining) {
+            for (const rule of colorRules) {
+                if (remaining >= rule.endTime && remaining <= rule.startTime) {
+                    return rule.color;
+                }
+            }
+            return '#ffffff';
+        }
+        
+        function updateTimer() {
+            const now = getSyncedTime();
+            
+            if (now === null) {
+                return;
+            }
+            
+            const remaining = (endTime - now + deltaTime) / 1000;
+            
+            const deltaSeconds = deltaTime / 1000;
+            deltaTextEl.innerHTML = `<b>${deltaSeconds >= 0 ? '+' : ''}${deltaSeconds.toFixed(2)}s</b>`;
+            deltaTextEl.style.color = deltaSeconds === 0 ? '#000000' : (deltaSeconds > 0 ? '#28a745' : '#dc3545');
+            
+            if (remaining <= 0) {
+                countdownEl.textContent = '0';
+                countdownEl.style.color = '#000000';
+                document.getElementById('claimBtn').style.visibility = 'visible';
+                document.getElementById('claimChangeBtn').style.visibility = 'visible';
+                document.body.style.backgroundColor = '#ffffff';
+                
+                if (syncIntervalId) {
+                    clearInterval(syncIntervalId);
+                    syncIntervalId = null;
+                }
+                
+                const endTimeFormatted = formatTime(endTime);
+                const nowFormatted = formatTime(now);
+                timeEl.textContent = `${nowFormatted} - ${endTimeFormatted}`;
+                return;
+            }
+            
+            countdownEl.textContent = remaining.toFixed(1);
+            countdownEl.style.color = '#000000';
+            
+            const endTimeFormatted = formatTime(endTime);
+            const nowFormatted = formatTime(now);
+            timeEl.textContent = `${nowFormatted} - ${endTimeFormatted}`;
+            
+            document.body.style.backgroundColor = getBackgroundColor(remaining);
+        }
+        
+        document.getElementById('btn-increase-0.01').addEventListener('click', () => {
+            deltaTime += 10;
+            localStorage.setItem('delta_time', deltaTime.toString());
+            updateTimer();
+        });
+        
+        document.getElementById('btn-increase-0.05').addEventListener('click', () => {
+            deltaTime += 50;
+            localStorage.setItem('delta_time', deltaTime.toString());
+            updateTimer();
+        });
+        
+        document.getElementById('btn-decrease-0.01').addEventListener('click', () => {
+            deltaTime -= 10;
+            localStorage.setItem('delta_time', deltaTime.toString());
+            updateTimer();
+        });
+        
+        document.getElementById('btn-decrease-0.05').addEventListener('click', () => {
+            deltaTime -= 50;
+            localStorage.setItem('delta_time', deltaTime.toString());
+            updateTimer();
+        });
+        
+        document.getElementById('claimBtn').addEventListener('click', () => {
+            const appLink = `https://www.tiktok.com/share/live/${room}`;
+            navigator.clipboard.writeText(appLink).then(() => {
+                const btn = document.getElementById('claimBtn');
+                const originalText = btn.textContent;
+                btn.textContent = 'Đã copy!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        });
+        
+        document.getElementById('changeUIBtn').addEventListener('click', () => {
+            window.location.href = 't' + window.location.search;
+        });
+        
+        function renderColorList() {
+            const colorListEl = document.getElementById('color-list');
+            if (colorRules.length === 0) {
+                colorListEl.innerHTML = '';
+                return;
+            }
+            
+            colorListEl.innerHTML = colorRules.map((rule, index) => `
+                <div style="padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; background: ${rule.color};">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>${rule.startTime}s - ${rule.endTime}s</strong>
+                            <div style="margin-top: 5px; color: #333;">Màu: ${rule.color}</div>
+                        </div>
+                        <button onclick="removeColorRule(${index})" style="padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Xóa</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function saveColorRules() {
+            localStorage.setItem(colorStorageKey, JSON.stringify(colorRules));
+            renderColorList();
+            updateTimer();
+            
+            const url = new URL(window.location.href);
+            if (colorRules.length > 0) {
+                const cEncoded = encodeURIComponent(JSON.stringify(colorRules));
+                url.searchParams.set('c', cEncoded);
+            } else {
+                url.searchParams.delete('c');
+            }
+            window.history.replaceState({}, '', url);
+        }
+        
+        function removeColorRule(index) {
+            colorRules.splice(index, 1);
+            saveColorRules();
+        }
+        
+        window.removeColorRule = removeColorRule;
+        
+        const modalOverlay = document.getElementById('modal-overlay');
+        
+        document.getElementById('btn-open-config').addEventListener('click', () => {
+            modalOverlay.style.display = 'flex';
+        });
+        
+        document.getElementById('btn-close-config').addEventListener('click', () => {
+            modalOverlay.style.display = 'none';
+        });
+        
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                modalOverlay.style.display = 'none';
+            }
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modalOverlay.style.display === 'flex') {
+                modalOverlay.style.display = 'none';
+            }
+        });
+        
+        const colorPicker = document.getElementById('color-picker');
+        
+        document.getElementById('btn-pick-color').addEventListener('click', () => {
+            colorPicker.click();
+        });
+        
+        document.getElementById('btn-add-color').addEventListener('click', () => {
+            const startTime = parseFloat(document.getElementById('start-time').value);
+            const endTime = parseFloat(document.getElementById('end-time').value);
+            const color = colorPicker.value;
+            
+            if (isNaN(startTime) || isNaN(endTime) || !color) {
+                alert('Vui lòng điền đầy đủ thông tin!');
+                return;
+            }
+            
+            colorRules.push({ startTime, endTime, color });
+            saveColorRules();
+            
+            document.getElementById('start-time').value = '';
+            document.getElementById('end-time').value = '';
+            colorPicker.value = '#ff0000';
+        });
+        
+        renderColorList();
+    </script>
+</body>
+</html>
